@@ -24,7 +24,7 @@
       appWindow.listen("tauri://close-requested", async () => {
         await appWindow.hide(); // Minimize instead of closing
       });
-      
+
       window.showPrompt = () => {
         document.getElementById('statusPrompt').style.display = 'block';
       }
@@ -45,6 +45,18 @@
           window.__TAURI__.invoke('log_status', { status });
         });
       }
+      async function verifyToken() {
+        const token = localStorage.getItem("jwt_token");
+        const res = await fetch(`http://localhost:8000/verify?token=${token}`);
+        const data = await res.json();
+        if (!data.valid) {
+          window.location.href = "login.html"; // redirect if not valid
+        } else {
+          console.log("Role:", data.role);
+        }
+      }
+
+      verifyToken();
     </script>
   </body>
 </html>
