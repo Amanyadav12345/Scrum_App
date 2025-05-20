@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SCRUM Assistant</title>
+    <script src="idle-check.js" defer></script>
+    <style>
+      #statusPrompt {
+        display: none;
+        position: fixed; top: 30%; left: 30%;
+        padding: 20px; background: #fff; border: 2px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="statusPrompt">
+      <h3>You've been inactive</h3>
+      <textarea id="statusText" rows="4" cols="40"></textarea>
+      <button onclick="submitStatus()">Submit</button>
+    </div>
+
+    <script>
+      const { appWindow } = window.__TAURI__.window;
+
+      appWindow.listen("tauri://close-requested", async () => {
+        await appWindow.hide(); // Minimize instead of closing
+      });
+      
+      window.showPrompt = () => {
+        document.getElementById('statusPrompt').style.display = 'block';
+      }
+
+      window.punchOut = () => {
+        document.getElementById('statusPrompt').innerHTML = '<h3>Punched out for 1 hour due to inactivity.</h3>';
+        window.__TAURI__.invoke('log_punch_out');
+      }
+
+      function submitStatus() {
+        const status = document.getElementById('statusText').value;
+        fetch('http://127.0.0.1:8000/analyze-status', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({text: status})
+        }).then(() => {
+          document.getElementById('statusPrompt').style.display = 'none';
+          window.__TAURI__.invoke('log_status', { status });
+        });
+      }
+    </script>
+  </body>
+</html>
